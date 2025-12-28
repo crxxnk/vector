@@ -10,24 +10,30 @@ private:
 public:
     auto size() noexcept -> size_t const { return _size; }
     auto capacity() noexcept -> size_t const { return _capacity; }
-    auto empty() noexcept -> bool const { return size() == 0; }
+    auto empty() noexcept -> bool const { return _size == 0; }
     auto push_back(const T& val) -> void;
     auto reserve(size_t n) -> void;
     auto front() const -> T& { return buffer[0]; }
     auto back() const -> T& { return buffer[_size-1]; }
     auto begin() const -> T* { return buffer; }
     auto end() const -> T* { return buffer + _size; /*or &buffer[_size]*/ }
+    auto cbegin() const -> const T* { return buffer; }
+    auto cend() const -> const T* { return buffer + _size; /*or &buffer[_size]*/ }
     auto operator=(vector&& other) -> vector&;
     auto at(size_t index) -> T&;
     auto assign(size_t count, const T& val) -> void;
     auto assign(T* begin, T* end) -> void;
-    vector(size_t n, const T &&val);
+    auto operator[](size_t n) -> T&;
+    auto const data() -> const T*;
+    auto clear() -> void;
+    auto pop_back() -> void;
+    vector(size_t n, const T &val);
     vector();
     ~vector() noexcept;
 };
 
 template <typename T>
-vector<T>::vector(size_t n, const T &&val)
+vector<T>::vector(size_t n, const T &val)
 {
     _size = 0;
     _capacity = 0;
@@ -123,6 +129,33 @@ auto vector<T>::assign(T* begin, T* end) -> void
         i++;
     }
     _size = i;
+}
+
+template <typename T>
+auto vector<T>::operator[](size_t n) -> T&
+{
+    return buffer[n];
+}
+
+template <typename T>
+auto const vector<T>::data() -> const T*
+{
+    if(*this)
+        return buffer;
+    return nullptr;
+}
+
+template <typename T>
+auto vector<T>::clear() -> void
+{
+    buffer = nullptr;
+}
+
+template <typename T>
+auto vector<T>::pop_back() -> void
+{
+    if(!empty())
+        _size--;
 }
 
 template <typename T>
