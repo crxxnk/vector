@@ -2,9 +2,9 @@
 
 int main()
 {
-    vector<int> vec;
-    vec.push_back(1);
-    std::cout << vec.front() << std::endl;
+    vector<int> vec(2, 1);
+    std::cout << vec.at(0) << vec.at(1) << std::endl;
+    // vector<int> vec2 = {1,2,3};
     
     return 0;
 }

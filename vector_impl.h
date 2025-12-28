@@ -15,25 +15,31 @@ public:
     auto reserve(size_t n) -> void;
     auto front() const -> T& { return buffer[0]; }
     auto back() const -> T& { return buffer[_size-1]; }
-    T* operator=(const T& other);
-    vector(size_t n, const T &val);
+    auto begin() const -> T* { return buffer; }
+    auto end() const -> T* { return buffer + _size; /*or &buffer[_size]*/ }
+    auto operator=(vector&& other) -> vector&;
+    auto at(size_t index) -> T&;
+    auto assign(size_t count, const T& val) -> void;
+    auto assign(T* begin, T* end) -> void;
+    vector(size_t n, const T &&val);
     vector();
     ~vector() noexcept;
 };
 
 template <typename T>
-vector<T>::vector(size_t n, const T &val)
+vector<T>::vector(size_t n, const T &&val)
 {
-    _size = n;
-    buffer = new T[n];
-    // _capacity = 
+    _size = 0;
+    _capacity = 0;
+    buffer = nullptr;
+    assign(n, val);
 }
 
 template <typename T>
 vector<T>::vector()
 {
     _size = 0;
-    buffer = 0;
+    buffer = nullptr;
     _capacity = 0;
 }
 
@@ -48,6 +54,7 @@ auto vector<T>::push_back(const T& val) -> void
     // buffer[_size] = val;
     // size++;
     buffer[_size++] = val; // same as above
+    std::cout << "pushed" << std::endl;
 }
 
 template <typename T>
@@ -56,27 +63,72 @@ auto vector<T>::reserve(size_t n) -> void
     if(n <= _capacity)
         return;
 
-    T* buf = new T[n];
-    buffer = buf;
+    T* old_buf = buffer;
+    buffer = new T[n];
     _capacity = n;
 
     for(size_t i = 0; i < _size; i++)
-        buf[i] = buffer[i];
+        buffer[i] = old_buf[i];
 
-    delete[] buffer;
-    buffer = buf;    
+    delete[] old_buf;
 }
 
 template <typename T>
-T *vector<T>::operator=(const T &other)
+auto vector<T>::operator=(vector &&other) -> vector&
 {
+    delete[] buffer;
+    _size = other._size;
+    _capacity = other._capacity;
+    buffer = new T[_size];
+    for(size_t i = 0; i < _capacity; i++)
+        buffer[i] = other[i];
+    buffer = other.buffer;
+    other.buffer = nullptr;
+    return *this;
+}
+
+template <typename T>
+auto vector<T>::at(size_t index) -> T&
+{
+    if(index > _size-1)
+        throw std::out_of_range("Tried to access vector element at index " + std::to_string(index));
     
+    return buffer[index];
+}
+
+template <typename T>
+auto vector<T>::assign(size_t count, const T& val) -> void
+{
+    while(count > _capacity) {
+        size_t cap = _capacity ? _capacity * 2 : 1;
+        reserve(cap);
+    }
+
+    for(size_t i = 0; i < count; i++)
+        buffer[i] = val;
+
+    _size = count;
+}
+
+template <typename T>
+auto vector<T>::assign(T* begin, T* end) -> void
+{
+    size_t i = 0;
+    for(T* it = begin; it != end; it++) {
+        if(i >= _capacity) {
+            size_t cap = _capacity ? _capacity * 2 : 1;
+            reserve(cap);
+        }
+        buffer[i] = *it;
+        i++;
+    }
+    _size = i;
 }
 
 template <typename T>
 vector<T>::~vector() noexcept
 {
-    delete buffer;
+    delete[] buffer;
     buffer = nullptr;
     _size = 0;
     _capacity = 0;
