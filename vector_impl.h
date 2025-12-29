@@ -22,11 +22,14 @@ public:
     auto operator=(vector&& other) -> vector&;
     auto at(size_t index) -> T&;
     auto assign(size_t count, const T& val) -> void;
-    auto assign(T* begin, T* end) -> void;
+    auto assign(T* first, T* last) -> void;
     auto operator[](size_t n) -> T&;
     auto const data() -> const T*;
     auto clear() -> void;
     auto pop_back() -> void;
+    auto insert(const T* pos, const T& val) -> T*;
+    auto erase(const T* pos) -> T*;
+    auto erase(const T* first, const T* last) -> T*;
     vector(size_t n, const T &val);
     vector();
     ~vector() noexcept;
@@ -117,10 +120,10 @@ auto vector<T>::assign(size_t count, const T& val) -> void
 }
 
 template <typename T>
-auto vector<T>::assign(T* begin, T* end) -> void
+auto vector<T>::assign(T* first, T* last) -> void
 {
     size_t i = 0;
-    for(T* it = begin; it != end; it++) {
+    for(T* it = first; it != last; it++) {
         if(i >= _capacity) {
             size_t cap = _capacity ? _capacity * 2 : 1;
             reserve(cap);
@@ -156,6 +159,74 @@ auto vector<T>::pop_back() -> void
 {
     if(!empty())
         _size--;
+}
+
+template <typename T>
+auto vector<T>::insert(const T* pos, const T& val) -> T*
+{
+    if(!pos)
+        throw std::invalid_argument("Insert position can't be null");
+
+    while(_size >= _capacity) {
+        size_t cap = _capacity ? _capacity * 2 : 1;
+        reserve(cap);
+    }
+    
+    size_t index = pos - begin();
+
+    if(index > _size)
+        throw std::out_of_range("Insert position out of range");
+    
+    for(size_t i = _size; i > index; i--)
+        buffer[i] = buffer[i-1];
+
+    _size++;
+    buffer[index] = val;
+
+    return begin() + index;
+}
+
+template <typename T>
+auto vector<T>::erase(const T* pos) -> T*
+{
+    if(!pos)
+        throw std::invalid_argument("Erase position can't be null");
+
+    size_t index = pos - begin();
+
+    if(index > _size)
+        throw std::out_of_range("Erase position out of range");
+
+    for(size_t i = index; i < _size; i++)
+        buffer[i] = buffer[i+1];
+    
+    _size--;
+
+    return begin() + index;
+}
+
+template <typename T>
+auto vector<T>::erase(const T* first, const T* last) -> T*
+{
+    if(!first || !last)
+        throw std::invalid_argument("Erase position can't be null");
+
+    size_t index_beg = first - begin();
+    size_t index_end = last - begin();
+
+    if(index_beg > _size || index_end > _size)
+        throw std::out_of_range("Erase position out of range");
+
+    std::cout << "dqwu" << last-first << std::endl;
+
+    for(size_t j = 0; j < last-first; j++) {
+        for(size_t i = index_beg; i < _size; i++)
+            buffer[i] = buffer[i+1];
+    }
+    
+    _size -= last-first;
+
+    return buffer;
 }
 
 template <typename T>
